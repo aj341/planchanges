@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Plan Change Pro-Rata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&family=DM+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working card, inputs on the left, the answer on the right; stacks on phones */
+:root {
+  --bg: #F6F2E8;
+  --surface: #FFFDF8;
+  --ink: #1E1B14;
+  --muted: #6A6353;
+  --line: #E2DACA;
+  --honey: #F2B92F;
+  --honey-soft: #FCEBC0;
+  --charge: #8A5A00;
+  --refund: #1F6B4A;
+  --refund-soft: #DDF0E5;
+  --focus: #B9861A;
+  --f-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-num: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #15130F; --surface: #1F1C16; --ink: #F3EEE2; --muted: #ABA391; --line: #36312A;
+    --honey: #F2B92F; --honey-soft: #3A2F14; --charge: #F5C756; --refund: #7FD1A6; --refund-soft: #173326; --focus: #F2B92F;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #15130F; --surface: #1F1C16; --ink: #F3EEE2; --muted: #ABA391; --line: #36312A;
+  --honey: #F2B92F; --honey-soft: #3A2F14; --charge: #F5C756; --refund: #7FD1A6; --refund-soft: #173326; --focus: #F2B92F;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 980px; margin: 0 auto; padding-inline: 16px; padding-block: 32px 48px; display: grid; gap: 20px; }
+header { display: grid; gap: 4px; }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0; font-size: clamp(26px, 4vw, 34px); line-height: 1.15; text-wrap: balance; }
+header p { margin: 0; color: var(--muted); max-width: 62ch; }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); overflow: hidden; }
+@media (max-width: 760px) { .card { grid-template-columns: minmax(0, 1fr); } }
+.inputs { padding: 24px; display: grid; gap: 20px; align-content: start; border-right: 1px solid var(--line); }
+@media (max-width: 760px) { .inputs { border-right: 0; border-bottom: 1px solid var(--line); } }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 12px; min-width: 0; }
+legend { font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 0; margin-bottom: 10px; }
+.row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: start; }
+@media (max-width: 420px) { .row { grid-template-columns: minmax(0, 1fr); } }
+label { display: grid; gap: 6px; align-content: start; font-size: 13px; font-weight: 500; min-width: 0; }
+.hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+input, select { font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 0 11px; height: 44px; width: 100%; min-width: 0; }
+.check { align-self: start; padding-top: 30px; }
+@media (max-width: 420px) { .check { padding-top: 0; } }
+input[type="number"], input[type="date"] { font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+input:focus-visible, select:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.money { position: relative; }
+.money span { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--muted); font-family: var(--f-num); pointer-events: none; }
+.money input { padding-left: 24px; }
+.check { display: flex; gap: 10px; align-items: flex-start; font-weight: 400; }
+.check input { width: 18px; height: 18px; padding: 0; flex: none; margin-top: 2px; accent-color: var(--honey); }
+.inline-btn { font: inherit; font-size: 12px; background: none; border: 0; padding: 0; color: var(--muted); text-decoration: underline; cursor: pointer; justify-self: start; }
+
+.result { padding: 24px; display: grid; gap: 18px; align-content: start; }
+.verdict { border-radius: 12px; padding: 18px 20px; background: var(--honey-soft); display: grid; gap: 4px; }
+.verdict.refund { background: var(--refund-soft); }
+.verdict.none { background: var(--bg); }
+.verdict .label { font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--charge); }
+.verdict.refund .label { color: var(--refund); }
+.verdict.none .label { color: var(--muted); }
+.amount { font-family: var(--f-num); font-size: clamp(36px, 6vw, 48px); font-weight: 500; line-height: 1.1; font-variant-numeric: tabular-nums; letter-spacing: -.02em; }
+.verdict .sub { color: var(--muted); font-size: 13px; }
+.err { color: var(--charge); font-size: 13px; }
+
+dl { margin: 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; border-top: 1px solid var(--line); }
+dt, dd { padding: 9px 0; border-bottom: 1px solid var(--line); margin: 0; font-size: 14px; }
+dt { color: var(--muted); padding-right: 12px; }
+dd { text-align: right; font-family: var(--f-num); font-variant-numeric: tabular-nums; }
+dd.strong, dt.strong { color: var(--ink); font-weight: 700; }
+
+.timeline { display: grid; gap: 6px; }
+.bar { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; display: flex; }
+.bar .used { background: var(--muted); opacity: .35; }
+.bar .rest { background: var(--honey); }
+.bar-labels { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-family: var(--f-num); gap: 8px; flex-wrap: wrap; }
+
+.copy { display: grid; gap: 8px; }
+.copy p { margin: 0; font-size: 13px; padding: 10px 12px; border: 1px dashed var(--line); border-radius: 8px; user-select: all; }
+button.primary { font: inherit; font-weight: 700; font-size: 14px; background: var(--ink); color: var(--surface); border: 0; border-radius: 8px; padding: 10px 14px; cursor: pointer; justify-self: start; }
+button.primary:hover { opacity: .9; }
+
+.notes { font-size: 13px; color: var(--muted); display: grid; gap: 6px; max-width: 75ch; }
+.notes p { margin: 0; }
+
+.tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 560px) { .tabs { grid-template-columns: minmax(0, 1fr); } }
+.tab { font: inherit; text-align: left; cursor: pointer; background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; display: grid; gap: 4px; }
+.tab b { font-size: 15px; }
+.tab span { font-size: 13px; color: var(--muted); }
+.tab[aria-selected="true"] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.tab[aria-selected="true"] b::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--honey); margin-right: 8px; vertical-align: middle; }
+.bar .gone { background: var(--refund); opacity: .55; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Design Bees · Billing</div>
+    <h1>Plan change pro-rata</h1>
+    <p>Work out what to charge or refund when a client changes plan part way through their billing cycle. Pick the option that matches how the change is being handled.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="How the plan change is handled">
+    <button type="button" class="tab" role="tab" id="tab-difference" aria-selected="true" aria-controls="calc">
+      <b>Option 1: Keep their billing date</b>
+      <span>Charge or refund the price difference for the rest of this cycle. Their billing date stays the same.</span>
+    </button>
+    <button type="button" class="tab" role="tab" id="tab-restart" aria-selected="false" aria-controls="calc">
+      <b>Option 2: Start a new month today</b>
+      <span>They pay the new plan in full today. Refund the unused days of their current plan. Their billing date moves.</span>
+    </button>
+  </div>
+
+  <form class="card" id="calc" role="tabpanel" novalidate>
+    <div class="inputs">
+      <fieldset>
+        <legend>Plans</legend>
+        <div class="row">
+          <label for="fromPreset">Current plan
+            <select id="fromPreset"></select>
+          </label>
+          <label for="fromPrice">Monthly price
+            <div class="money"><span>$</span><input id="fromPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+        </div>
+        <div class="row">
+          <label for="toPreset">Changing to
+            <select id="toPreset"></select>
+          </label>
+          <label for="toPrice">Monthly price
+            <div class="money"><span>$</span><input id="toPrice" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Dates</legend>
+        <div class="row">
+          <label for="billDay">Billing day of the month
+            <input id="billDay" type="number" min="1" max="31" step="1" inputmode="numeric">
+          </label>
+          <label for="changeDate">Date the change starts
+            <input id="changeDate" type="date">
+          </label>
+        </div>
+        <div class="row">
+          <label for="cycleDays">Days in this billing cycle
+            <input id="cycleDays" type="number" min="1" max="31" step="1" inputmode="numeric">
+            <span class="hint" id="cycleHint">Filled in from the dates</span>
+            <button type="button" class="inline-btn" id="autoDays" hidden>Reset to match the dates</button>
+          </label>
+          <label class="check" for="countToday" id="countTodayWrap">
+            <input id="countToday" type="checkbox" checked>
+            <span>The change date counts as a day on the new plan<br><span class="hint">Untick if the new plan starts the next day</span></span>
+          </label>
+          <label class="check" for="usedToday" id="usedTodayWrap" hidden>
+            <input id="usedToday" type="checkbox" checked>
+            <span>Their current plan's hours are used on the change date<br><span class="hint">Untick to refund the change date as well</span></span>
+          </label>
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="result" aria-live="polite">
+      <div class="verdict" id="verdict">
+        <div class="label" id="vLabel">Charge today</div>
+        <div class="amount" id="vAmount">$0.00</div>
+        <div class="sub" id="vSub"></div>
+      </div>
+      <div class="err" id="err" hidden></div>
+
+      <div class="timeline">
+        <div class="bar"><div class="used" id="barUsed"></div><div class="rest" id="barRest"></div></div>
+        <div class="bar-labels"><span id="tStart"></span><span id="tChange"></span><span id="tNext"></span></div>
+      </div>
+
+      <dl id="workings"></dl>
+
+      <div class="copy">
+        <p id="lineItem"></p>
+        <button type="button" class="primary" id="copyBtn">Copy invoice line</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="notes" id="notes1">
+    <p><b>Option 1, how it works:</b> the price difference × days left in the cycle ÷ days in the cycle. Days left run from the change date up to the day before the next billing date.</p>
+    <p>A negative result is a downgrade. Refund it, or credit it against their next invoice. From their usual billing date they pay the new plan's full price.</p>
+    <p>If the new plan includes more hours, give them the same share of the extra hours (days left ÷ days in the cycle).</p>
+  </div>
+  <div class="notes" id="notes2" hidden>
+    <p><b>Option 2, how it works:</b> the current plan's price × unused days ÷ days in the cycle is refunded. The new plan is charged in full on the change date and every month after on that same day.</p>
+    <p>If the client uses both plans' hours on the change date, leave the tick on so that day isn't refunded.</p>
+    <p>Move their billing date and cancel the old plan's next charge, or they will be billed twice.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  const PLANS = [
+    { name: "Honeycomb", price: 1645 },
+    { name: "Nectar", price: 2645 },
+    { name: "Custom", price: null }
+  ];
+  const $ = id => document.getElementById(id);
+  const MS = 86400000;
+  const r2 = n => Math.round(n * 100) / 100;
+  const fmtMoney = n => (n < 0 ? "-" : "") + "$" + Math.abs(n).toLocaleString("en-AU", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const fmtDate = d => d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" });
+  const dim = (y, m) => new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+  const billDate = (y, m, day) => { const yy = y + Math.floor(m / 12), mm = ((m % 12) + 12) % 12; return new Date(Date.UTC(yy, mm, Math.min(day, dim(yy, mm)))); };
+  const addDays = (d, n) => new Date(+d + n * MS);
+
+  let mode = location.hash === "#restart" ? "restart" : "difference";
+  let daysManual = false;
+
+  ["fromPreset", "toPreset"].forEach((id, i) => {
+    const sel = $(id);
+    PLANS.forEach(p => { const o = document.createElement("option"); o.value = p.name; o.textContent = p.price ? `${p.name} ($${p.price.toLocaleString("en-AU")})` : p.name; sel.appendChild(o); });
+    sel.value = i === 0 ? "Honeycomb" : "Nectar";
+  });
+
+  // Example starting state: Honeycomb to Nectar, billed on the 2nd, changing on 14 Oct 2026
+  $("fromPrice").value = 1645; $("toPrice").value = 2645; $("billDay").value = 2; $("changeDate").value = "2026-10-14";
+
+  function syncPreset(presetId, priceId) {
+    const p = PLANS.find(x => x.name === $(presetId).value);
+    if (p && p.price != null) $(priceId).value = p.price;
+    if (p && p.price == null) $(priceId).focus();
+  }
+  function syncPresetFromPrice(presetId, priceId) {
+    const v = parseFloat($(priceId).value);
+    const match = PLANS.find(x => x.price === v);
+    $(presetId).value = match ? match.name : "Custom";
+  }
+
+  function setMode(m) {
+    mode = m;
+    $("tab-difference").setAttribute("aria-selected", m === "difference");
+    $("tab-restart").setAttribute("aria-selected", m === "restart");
+    $("countTodayWrap").hidden = m !== "difference";
+    $("usedTodayWrap").hidden = m !== "restart";
+    $("notes1").hidden = m !== "difference";
+    $("notes2").hidden = m !== "restart";
+    try { history.replaceState(null, "", m === "restart" ? "#restart" : "#difference"); } catch (e) {}
+    calc();
+  }
+
+  function setVerdict(total, label) {
+    $("verdict").className = "verdict" + (total < 0 ? " refund" : total === 0 ? " none" : "");
+    $("vLabel").textContent = label;
+    $("vAmount").textContent = fmtMoney(Math.abs(total));
+  }
+  function rows(list) {
+    $("workings").innerHTML = list.map(r => `<dt${r[2] ? ' class="strong"' : ""}>${r[0]}</dt><dd${r[2] ? ' class="strong"' : ""}>${r[1]}</dd>`).join("");
+  }
+
+  function calc() {
+    const from = parseFloat($("fromPrice").value), to = parseFloat($("toPrice").value);
+    const day = parseInt($("billDay").value, 10);
+    const cd = $("changeDate").value;
+    const err = $("err"); err.hidden = true;
+    const fail = msg => { err.textContent = msg; err.hidden = false; $("vAmount").textContent = "-"; $("vSub").textContent = ""; $("workings").innerHTML = ""; $("lineItem").textContent = ""; };
+
+    if (isNaN(from) || isNaN(to)) return fail("Enter a monthly price for both plans.");
+    if (!(day >= 1 && day <= 31)) return fail("Billing day must be between 1 and 31.");
+    if (!cd) return fail("Pick the date the change starts.");
+
+    const [y, m, d] = cd.split("-").map(Number);
+    const change = new Date(Date.UTC(y, m - 1, d));
+    let start = billDate(y, m - 1, day);
+    if (start > change) start = billDate(y, m - 2, day);
+    const next = billDate(start.getUTCFullYear(), start.getUTCMonth() + 1, day);
+    const autoCycle = Math.round((next - start) / MS);
+
+    if (!daysManual) $("cycleDays").value = autoCycle;
+    $("autoDays").hidden = !daysManual;
+    $("cycleHint").textContent = `${fmtDate(start)} to ${fmtDate(addDays(next, -1))} is ${autoCycle} days`;
+    const cycle = parseInt($("cycleDays").value, 10);
+    if (!(cycle >= 1)) return fail("Days in this billing cycle must be at least 1.");
+
+    const fromName = $("fromPreset").value === "Custom" ? "current plan" : $("fromPreset").value;
+    const toName = $("toPreset").value === "Custom" ? "new plan" : $("toPreset").value;
+    const lastDay = addDays(next, -1);
+
+    if (mode === "difference") {
+      let left = Math.round((next - change) / MS);
+      if (!$("countToday").checked) left -= 1;
+      left = Math.max(0, left);
+      if (left > cycle) return fail(`There are ${left} days left but only ${cycle} days in the cycle. Check the days in this billing cycle.`);
+
+      const diff = to - from;
+      const total = r2(diff * left / cycle);
+      setVerdict(total, total > 0 ? "Charge today" : total < 0 ? "Refund or credit" : "Nothing to charge");
+      $("vSub").textContent = `GST included. Then ${fmtMoney(to)} a month from ${fmtDate(next)}.`;
+
+      $("barUsed").className = "used"; $("barRest").className = "rest";
+      $("barUsed").style.width = ((cycle - left) / cycle * 100) + "%";
+      $("barRest").style.width = (left / cycle * 100) + "%";
+      $("tStart").textContent = fmtDate(start);
+      $("tChange").textContent = "Change " + fmtDate(change);
+      $("tNext").textContent = "Next bill " + fmtDate(next);
+
+      rows([
+        ["Monthly difference", fmtMoney(diff)],
+        ["Days left on the new plan", `${left} of ${cycle}`],
+        ["Per day", fmtMoney(r2(diff / cycle))],
+        ["GST included (1/11)", fmtMoney(r2(total / 11))],
+        [total < 0 ? "Refund or credit" : "Charge today", fmtMoney(total), true]
+      ]);
+
+      const firstDay = $("countToday").checked ? change : addDays(change, 1);
+      $("lineItem").textContent = `Pro-rata ${diff >= 0 ? "upgrade" : "downgrade"} from ${fromName} to ${toName}, ${fmtDate(firstDay)} to ${fmtDate(lastDay)} (${left} of ${cycle} days): ${fmtMoney(total)} inc GST`;
+    } else {
+      const refundFrom = $("usedToday").checked ? addDays(change, 1) : change;
+      let unused = Math.max(0, Math.round((next - refundFrom) / MS));
+      if (unused > cycle) return fail(`There are ${unused} unused days but only ${cycle} days in the cycle. Check the days in this billing cycle.`);
+      const used = cycle - unused;
+      const perDay = from / cycle;
+      const refund = r2(from * unused / cycle);
+      const kept = r2(from - refund);
+      const newNext = billDate(y, m, d);
+      const net = r2(to - refund);
+
+      setVerdict(-refund, unused ? "Refund" : "Nothing to refund");
+      $("vSub").textContent = `GST included. ${toName} is ${fmtMoney(to)} today, then every month from ${fmtDate(newNext)}.`;
+
+      $("barUsed").className = "used"; $("barRest").className = "gone";
+      $("barUsed").style.width = (used / cycle * 100) + "%";
+      $("barRest").style.width = (unused / cycle * 100) + "%";
+      $("tStart").textContent = fmtDate(start);
+      $("tChange").textContent = unused ? "Refund from " + fmtDate(refundFrom) : "";
+      $("tNext").textContent = "Old plan to " + fmtDate(lastDay);
+
+      rows([
+        [`${fromName} paid`, fmtMoney(from)],
+        ["Days used", `${used} of ${cycle}`],
+        ["Kept for days used", fmtMoney(kept)],
+        ["Unused days", `${unused} of ${cycle}`],
+        ["Per day", fmtMoney(r2(perDay))],
+        ["GST included in refund (1/11)", fmtMoney(r2(refund / 11))],
+        ["Refund", fmtMoney(refund), true],
+        [`${toName} charged today`, fmtMoney(to)],
+        ["Net paid today after refund", fmtMoney(net)],
+        ["New billing date", `${fmtDate(change)}, then ${fmtDate(newNext)}`]
+      ]);
+
+      $("lineItem").textContent = unused
+        ? `Refund of unused ${fromName} days, ${fmtDate(refundFrom)} to ${fmtDate(lastDay)} (${unused} of ${cycle} days): ${fmtMoney(refund)} inc GST`
+        : `No unused ${fromName} days to refund.`;
+    }
+  }
+
+  $("tab-difference").addEventListener("click", () => setMode("difference"));
+  $("tab-restart").addEventListener("click", () => setMode("restart"));
+  $("fromPreset").addEventListener("change", () => { syncPreset("fromPreset", "fromPrice"); calc(); });
+  $("toPreset").addEventListener("change", () => { syncPreset("toPreset", "toPrice"); calc(); });
+  $("fromPrice").addEventListener("input", () => { syncPresetFromPrice("fromPreset", "fromPrice"); calc(); });
+  $("toPrice").addEventListener("input", () => { syncPresetFromPrice("toPreset", "toPrice"); calc(); });
+  $("cycleDays").addEventListener("input", () => { daysManual = true; calc(); });
+  $("autoDays").addEventListener("click", () => { daysManual = false; calc(); });
+  ["billDay", "changeDate"].forEach(id => $(id).addEventListener("input", calc));
+  ["countToday", "usedToday"].forEach(id => $(id).addEventListener("change", calc));
+  $("calc").addEventListener("submit", e => e.preventDefault());
+
+  $("copyBtn").addEventListener("click", () => {
+    const text = $("lineItem").textContent, btn = $("copyBtn");
+    const done = () => { btn.textContent = "Copied"; setTimeout(() => btn.textContent = "Copy invoice line", 1500); };
+    const fallback = () => { const r = document.createRange(); r.selectNodeContents($("lineItem")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Selected, press Ctrl+C"; };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+  });
+
+  setMode(mode);
+})();
+</script>
+</body>
+</html>
